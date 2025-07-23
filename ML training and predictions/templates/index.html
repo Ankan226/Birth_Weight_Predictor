@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Birth Weight Prediction</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      background: linear-gradient(120deg, #fefcea, #f1da36);
+      animation: lightBG 10s ease-in-out infinite alternate;
+    }
+
+    @keyframes lightBG {
+      0% { background: linear-gradient(120deg, #fefcea, #f1da36); }
+      100% { background: linear-gradient(120deg, #fdfbfb, #ebedee); }
+    }
+
+    .bubbles {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .bubble {
+      position: absolute;
+      bottom: -150px;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      animation: floatBubble 25s infinite ease-in-out;
+      opacity: 0.7;
+      box-shadow: 0 0 10px rgba(255,255,255,0.5);
+    }
+
+    .bubble:nth-child(1) { left: 5%; width: 80px; height: 80px; animation-delay: 0s; }
+    .bubble:nth-child(2) { left: 20%; width: 100px; height: 100px; animation-delay: 4s; }
+    .bubble:nth-child(3) { left: 40%; width: 60px; height: 60px; animation-delay: 8s; }
+    .bubble:nth-child(4) { left: 60%; width: 120px; height: 120px; animation-delay: 2s; }
+    .bubble:nth-child(5) { left: 75%; width: 70px; height: 70px; animation-delay: 6s; }
+    .bubble:nth-child(6) { left: 90%; width: 110px; height: 110px; animation-delay: 1s; }
+
+    @keyframes floatBubble {
+      0% { transform: translateY(0) scale(1); opacity: 0.6; }
+      100% { transform: translateY(-110vh) scale(1.3); opacity: 0; }
+    }
+
+    .container {
+      z-index: 1;
+      background: rgba(255,255,255,0.25);
+      backdrop-filter: blur(14px);
+      border-radius: 25px;
+      padding: 2rem 1.5rem;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 12px 35px rgba(0,0,0,0.25);
+      text-align: center;
+      color: #333;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      margin-bottom: 1.5rem;
+      font-weight: 700;
+      color: #222;
+    }
+
+    .input-group {
+      position: relative;
+      margin-bottom: 1.3rem;
+      text-align: left;
+      transition: transform 0.3s ease;
+    }
+
+    .input-group:hover {
+      transform: scale(1.02);
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 0.3rem;
+      font-weight: 500;
+      font-size: 0.95rem;
+      color: #444;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 0.6rem 0.75rem 0.6rem 2.4rem;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      background: rgba(255,255,255,0.9);
+      transition: 0.2s ease;
+    }
+
+    .input-group input:focus {
+      outline: none;
+      background: #fff;
+      box-shadow: 0 0 8px rgba(0,123,255,0.6);
+    }
+
+    .icon {
+      position: absolute;
+      top: 50%;
+      left: 10px;
+      transform: translateY(-50%);
+      color: #ff9800;
+      font-size: 1.1rem;
+      transition: transform 0.3s;
+    }
+
+    .input-group input:focus ~ .icon {
+      transform: translateY(-50%) scale(1.2);
+    }
+
+    button {
+      width: 100%;
+      padding: 0.75rem;
+      font-size: 1.05rem;
+      background: linear-gradient(to right, #ffa726, #fb8c00);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s ease;
+      margin-top: 0.5rem;
+    }
+
+    button:hover {
+      background: linear-gradient(to right, #fb8c00, #ffa726);
+      transform: scale(1.04);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    h3 {
+      margin-top: 1.4rem;
+      font-weight: 600;
+      color: #3f51b5;
+      font-size: 1.1rem;
+    }
+
+    .loader-container {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+    }
+
+    .loader {
+      border: 6px solid rgba(0,0,0,0.1);
+      border-top: 6px solid #333;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 1rem;
+    }
+
+    .loader-text {
+      color: #333;
+      font-weight: 600;
+      font-size: 1.1rem;
+      text-align: center;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg);}
+      100% { transform: rotate(360deg);}
+    }
+
+    #chart-container {
+      margin-top: 2rem;
+      display: none;
+    }
+
+    audio {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+    }
+
+    @media screen and (max-width: 480px) {
+      h1 { font-size: 1.35rem; }
+      .container { padding: 1.5rem 1.2rem; }
+      button { font-size: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Animated Bubbles -->
+  <div class="bubbles">
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+  </div>
+
+  <!-- Background Music (optional) -->
+  <audio id="bg-music" controls autoplay loop>
+    <source src="https://www.fesliyanstudios.com/play-mp3/387" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+
+  <!-- Form -->
+  <div class="container" id="form-container">
+    <h1>Predict Birth Weight</h1>
+    <form action="/predict" method="POST" onsubmit="showLoader(); return true;">
+      <div class="input-group">
+        <span class="icon"><i class="fa-solid fa-calendar-days"></i></span>
+        <label for="gestation">Gestation (weeks)</label>
+        <input name="gestation" type="number" id="gestation" required />
+      </div>
+      <div class="input-group">
+        <span class="icon"><i class="fa-solid fa-baby"></i></span>
+        <label for="parity">Parity(previous children)</label>
+        <input name="parity" type="number" id="parity" required />
+      </div>
+      <div class="input-group">
+        <span class="icon"><i class="fa-solid fa-user"></i></span>
+        <label for="age">Mother's Age</label>
+        <input name="age" type="number" id="age" required />
+      </div>
+      <div class="input-group">
+        <span class="icon"><i class="fa-solid fa-ruler-vertical"></i></span>
+        <label for="height">Height (inches)</label>
+        <input name="height" type="number" id="height" required />
+      </div>
+      <div class="input-group">
+        <span class="icon"><i class="fa-solid fa-weight-scale"></i></span>
+        <label for="weight">Weight (pounds)</label>
+        <input name="weight" type="number" id="weight" required />
+      </div>
+      <div class="input-group">
+        <span class="icon"><i class="fa-solid fa-smoking"></i></span>
+        <label for="smoke">Smoke (0 = No, 1 = Yes)</label>
+        <input name="smoke" type="number" id="smoke" required />
+      </div>
+      <button type="submit">Predict</button>
+      <h3>Predicted Birth Weight: {{prediction}} pounds</h3>
+    </form>
+
+    <!-- Chart Section -->
+    <div id="chart-container">
+      <canvas id="predictionChart" width="350" height="200"></canvas>
+    </div>
+  </div>
+
+  <!-- Loader -->
+  <div class="loader-container" id="loader">
+    <div class="loader"></div>
+    <div class="loader-text">Predicting... Please wait</div>
+  </div>
+
+  <script>
+    function showLoader() {
+      document.getElementById("form-container").style.display = "none";
+      document.getElementById("loader").style.display = "flex";
+    }
+
+    // Example chart (can populate dynamically later)
+    window.onload = function () {
+      const chartSection = document.getElementById("chart-container");
+      const ctx = document.getElementById("predictionChart").getContext("2d");
+
+      // Display chart only if there's a prediction
+      if ("{{prediction}}".length > 0 && "{{prediction}}" !== "{{prediction}}") {
+        chartSection.style.display = "block";
+
+        new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: ['Predicted Weight'],
+            datasets: [{
+              label: 'Weight (oz)',
+              data: [parseFloat("{{prediction}}")],
+              backgroundColor: '#ff9800'
+            }]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: { beginAtZero: true }
+            }
+          }
+        });
+      }
+    };
+  </script>
+</body>
+</html>
